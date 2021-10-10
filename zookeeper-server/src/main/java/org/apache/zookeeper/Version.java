@@ -84,12 +84,13 @@ public class Version implements org.apache.zookeeper.version.Info {
             System.out.println(getFullVersion());
             System.exit(0);
         }
-        if (args[0].equals("--short"))
+        if (args[0].equals("--short")) {
             System.out.println(getVersion());
-        else if (args[0].equals("--revision"))
+        } else if (args[0].equals("--revision")) {
             System.out.println(getVersionRevision());
-        else
+        } else {
             printUsage();
+        }
         System.exit(0);
     }
 }

@@ -615,9 +615,11 @@ public class QuorumCnxManager {
              * Now we start a new connection
              */
             LOG.debug("Create new connection to server: {}", sid);
+            // 如果发送选票的机器id小于当前机器，则关闭连接，为了防止机器之间相互重复建立socket连接（双向的），zk不允许id小的机器连接id大的机器
             closeSocket(sock);
 
             if (electionAddr != null) {
+                // 当前机器主动发起socket连接到发送选票的id较小的机器
                 connectOne(sid, electionAddr);
             } else {
                 connectOne(sid);
@@ -627,6 +629,7 @@ public class QuorumCnxManager {
             LOG.warn("We got a connection request from a server with our own ID. "
                     + "This should be either a configuration error, or a bug.");
         } else { // Otherwise start worker threads to receive data.
+            // 给发送给选票sid这台机器创建一个选票发送器
             SendWorker sw = new SendWorker(sock, sid);
             RecvWorker rw = new RecvWorker(sock, din, sid, sw);
             sw.setRecv(rw);
@@ -637,11 +640,14 @@ public class QuorumCnxManager {
                 vsw.finish();
             }
 
+            // 将选票发送器与sid对应放入map中
             senderWorkerMap.put(sid, sw);
 
+            // 给发送选票sid机器初始化一个发送选票队列放入map中
             queueSendMap.putIfAbsent(sid,
                     new ArrayBlockingQueue<ByteBuffer>(SEND_CAPACITY));
 
+            // 启动选票发送器线程
             sw.start();
             rw.start();
         }
@@ -1137,6 +1143,7 @@ public class QuorumCnxManager {
 
                     ByteBuffer b = null;
                     try {
+                        // 取出发送选票队列
                         ArrayBlockingQueue<ByteBuffer> bq = queueSendMap
                                 .get(sid);
                         if (bq != null) {
@@ -1149,6 +1156,7 @@ public class QuorumCnxManager {
 
                         if(b != null){
                             lastMessageSent.put(sid, b);
+                            // 发送选票
                             send(b);
                         }
                     } catch (InterruptedException e) {

@@ -945,7 +945,9 @@ public class FastLeaderElection implements Election {
                     case LOOKING:
                         // If notification > current, replace and send messages out
                         if (n.electionEpoch > logicalclock.get()) {
+                            // 更新自己的选举周期
                             logicalclock.set(n.electionEpoch);
+                            // 清空之前的选票
                             recvset.clear();
                             if(totalOrderPredicate(n.leader, n.zxid, n.peerEpoch,
                                     getInitId(), getInitLastLoggedZxid(), getPeerEpoch())) {
